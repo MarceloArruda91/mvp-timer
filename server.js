@@ -1,40 +1,36 @@
-const express = require('express');
-const { Low, JSONFile } = require('lowdb');
-const cors = require('cors');
-const path = require('path');
+// server.js
+import express from 'express';
+import cors    from 'cors';
+import path    from 'path';
+import { Low } from 'lowdb';
+import { JSONFile } from 'lowdb/node';
 
+const __dirname = path.resolve();
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// banco simples em JSON
-const db = new Low(new JSONFile('db.json'));
+const db = new Low(new JSONFile(path.join(__dirname,'db.json')));
 await db.read();
 db.data ||= { timers: {}, tombs: {} };
 
-// rotas da API
-app.get('/api/timers', async (req, res) => {
-    await db.read();
-    res.json(db.data.timers);
+// API de timers
+app.get ('/api/timers', (_,res)=> res.json(db.data.timers));
+app.post('/api/timers', (req,res)=>{
+  db.data.timers = req.body;
+  db.write();
+  res.sendStatus(204);
 });
-app.post('/api/timers', async (req, res) => {
-    db.data.timers = req.body;
-    await db.write();
-    res.sendStatus(204);
-});
-
-app.get('/api/tombs', async (req, res) => {
-    await db.read();
-    res.json(db.data.tombs);
-});
-app.post('/api/tombs', async (req, res) => {
-    db.data.tombs = req.body;
-    await db.write();
-    res.sendStatus(204);
+// API de túmulos
+app.get ('/api/tombs', (_,res)=> res.json(db.data.tombs));
+app.post('/api/tombs', (req,res)=>{
+  db.data.tombs = req.body;
+  db.write();
+  res.sendStatus(204);
 });
 
-// servir front-end estático
-app.use(express.static(path.join(__dirname, 'public')));
+// serve front-end estático
+app.use(express.static(path.join(__dirname,'public')));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server listening on ${PORT}`));
+app.listen(PORT, ()=>console.log(`API rodando na porta ${PORT}`));

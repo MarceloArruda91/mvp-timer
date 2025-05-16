@@ -1,27 +1,79 @@
-async function loadState() {
-  const [tResp, tTombs] = await Promise.all([
-    fetch('/api/timers').then(r => r.json()),
-    fetch('/api/tombs').then(r => r.json())
-  ]);
-  Object.assign(savedTimers, tResp);
-  Object.assign(savedTombs, tTombs);
-}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Respawn de MVPs - Ragnarok</title>
+  <style>
+    body { display: flex; justify-content: center; background: #1b1b1b; color: #eee; font-family: Arial, sans-serif; margin: 0; }
+    .wrapper { width: 90%; max-width: 1000px; padding: 20px; }
+    .selector { margin-bottom: 20px; text-align: center; }
+    .section { margin-bottom: 40px; }
+    .section h2 { margin-bottom: 10px; }
+    #active, #container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
 
-async function saveTimers() {
-  await fetch('/api/timers', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(savedTimers)
-  });
-}
+    /* padrão: 1 por linha */
+    .mvp-block {
+      display: flex;
+      align-items: flex-start;
+      flex: 0 0 100%;
+      background: #2a2a2a;
+      padding: 10px;
+      border-radius: 8px;
+    }
 
-async function saveTombs() {
-  await fetch('/api/tombs', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(savedTombs)
-  });
-}
+    /* somente “Em Contagem Regressiva”: 2 por linha (leva em conta o gap de 20px) */
+    #active .mvp-block {
+      flex: 0 0 calc((100% - 20px) / 2);
+    }
 
-// no início do render(), chame:
-await loadState();
+    .mob-img { width: 80px; height: 80px; margin-right: 10px; border-radius: 6px; flex-shrink: 0; }
+    .map-container { position: relative; margin-right: 20px; }
+    .map-container img { width: 200px; border: 2px solid #444; border-radius: 6px; cursor: pointer; display: block; }
+    .tomb { position: absolute; width: 24px; height: 24px; background: url('https://play-lh.googleusercontent.com/tJFGni5yOgBaZ8XKbh2aejYf6IVVfwF4xbuBIBDxbQmIWll6nfT0RgLNb8U2HZwckYw') no-repeat center/contain; pointer-events: none; }
+    .info { font-size: 14px; flex: 1; }
+    .timer { margin: 5px 0; font-weight: bold; }
+    .timer.green { color: #0f0; }
+    .timer.red { color: #f00; }
+    input[type="time"], button, select { margin-right: 5px; padding: 4px 8px; border-radius: 4px; border: none; }
+    input[type="time"], select { background: #333; color: #eee; }
+    button { background: #ff9800; color: #fff; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <h1 style="text-align:center;">Calculadora de Respawn de MVPs</h1>
+    <div class="selector">
+      <select id="mvp-select"><option value="">--Selecione um MVP--</option></select>
+      <button id="show-all">Mostrar Todos</button>
+    </div>
+    <audio id="alertSound"><source src="https://notificationsounds.com/storage/sounds/file-sounds-467-arpeggio.mp3" type="audio/mpeg"></audio>
+    <div id="active-section" class="section">
+      <h2>Em Contagem Regressiva</h2>
+      <div id="active"></div>
+    </div>
+    <div id="upcoming-section" class="section">
+      <h2>Próximos MVPs</h2>
+      <div id="container"></div>
+    </div>
+  </div>
+  <script>
+    // Substitua load/save de localStorage por:
+    async function loadState() {
+      const [timers, tombs] = await Promise.all([
+        fetch('/api/timers').then(r=>r.json()),
+        fetch('/api/tombs').then(r=>r.json())
+      ]);
+      Object.assign(savedTimers, timers);
+      Object.assign(savedTombs, tombs);
+    }
+    async function saveTimers() {
+      await fetch('/api/timers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(savedTimers)});
+    }
+    async function saveTombs() {
+      await fetch('/api/tombs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(savedTombs)});
+    }
+    // no início do render():
+    (async()=>{ await loadState(); render(); })();
+  </script>
+</body>
+</html>
