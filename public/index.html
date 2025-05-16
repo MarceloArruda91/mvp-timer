@@ -1,0 +1,27 @@
+async function loadState() {
+  const [tResp, tTombs] = await Promise.all([
+    fetch('/api/timers').then(r => r.json()),
+    fetch('/api/tombs').then(r => r.json())
+  ]);
+  Object.assign(savedTimers, tResp);
+  Object.assign(savedTombs, tTombs);
+}
+
+async function saveTimers() {
+  await fetch('/api/timers', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(savedTimers)
+  });
+}
+
+async function saveTombs() {
+  await fetch('/api/tombs', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(savedTombs)
+  });
+}
+
+// no início do render(), chame:
+await loadState();
